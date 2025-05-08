@@ -1,4 +1,7 @@
-#tenserflow 2.10
 #python 3.9
+#cuda_11.2
+#define CUDNN_MAJOR 8 CUDNN_MINOR 1 CUDNN_PATCHLEVEL 0
+#tenserflow 2.10
 #pip install fastapi uvicorn jinja2 python-multipart
+#pip install opencv-python
 #uvicorn main:app --reload

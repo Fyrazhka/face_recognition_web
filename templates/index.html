@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Распознавание лиц</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/script.js" defer></script>
+</head>
+<body>
+<div class="container">
+    <h1>Распознавание лиц в видео</h1>
+
+    <div class="panel">
+        <h2>Загрузите эталонные изображения и видео</h2>
+        <form action="/recognize/" enctype="multipart/form-data" method="post" id="upload-form">
+            <div class="form-group">
+                <label>Эталонные изображения (можно выбрать несколько):</label>
+                <input type="file" name="images" id="images-input" accept="image/*" multiple required>
+            </div>
+
+            <div id="images-container" class="images-preview">
+                <!-- Здесь будут отображаться выбранные изображения -->
+            </div>
+
+            <div id="names-container" class="names-container">
+                <!-- Здесь будут поля для ввода имен -->
+            </div>
+
+            <div class="form-group">
+                <label>Видео для анализа:</label>
+                <input type="file" name="video" accept="video/*" required>
+            </div>
+
+            <button type="submit" class="btn primary-btn">Начать распознавание</button>
+        </form>
+    </div>
+
+    {% if task_id %}
+    <div class="panel task-info">
+        <h3>Информация о задаче</h3>
+        <p class="success-text">Ваш ключ задачи: <strong id="original_task_id">{{ task_id }}</strong></p>
+        <p>Сохраните этот ключ для проверки статуса обработки позже.</p>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <h2>Проверить статус задачи</h2>
+        <form id="status_form" class="status-form">
+            <div class="form-group">
+                <input type="text" class = "task_id_input" id="task_id_input" name="task_id" placeholder="Введите ключ задачи" required>
+                <button type="submit" class="btn">Проверить</button>
+            </div>
+        </form>
+
+        <div id="status_result" class="status-result">
+            {% if task_status %}
+            {% if task_status == "done" %}
+            <p class="success-text">Статус задачи: <strong>Завершена</strong></p>
+            <a href="/download/{{ task_id }}" id="download_link" class="download-btn">Скачать результат</a>
+            {% elif task_status == "error" %}
+            <p class="error-text">Статус задачи: <strong>Ошибка</strong></p>
+            {% elif task_status == "in_progress" %}
+            <p class="progress-text">Статус задачи: <strong>В процессе</strong></p>
+            <button onclick="checkStatusAgain()" class="refresh-btn">Проверить снова</button>
+            {% else %}
+            <p>Статус задачи: <strong>{{ task_status }}</strong></p>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

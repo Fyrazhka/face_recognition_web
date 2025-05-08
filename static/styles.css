@@ -1,0 +1,259 @@
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+h2 {
+    color: #3498db;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* Стили для панелей */
+.panel {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+/* Стили для форм */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Кнопки */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    color: #fff;
+    background-color: #3498db;
+}
+
+.btn:hover {
+    background-color: #2980b9;
+}
+
+.primary-btn {
+    background-color: #2ecc71;
+    padding: 12px 25px;
+    font-size: 16px;
+}
+
+.primary-btn:hover {
+    background-color: #27ae60;
+}
+
+.refresh-btn {
+    background-color: #f39c12;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    color: white;
+    margin-top: 10px;
+}
+
+.refresh-btn:hover {
+    background-color: #e67e22;
+}
+
+.download-btn {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.download-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Отображение изображений */
+.images-preview {
+    margin: 20px 0;
+}
+
+.images-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.image-item {
+    width: 150px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+}
+
+.image-preview {
+    height: 150px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-label {
+    padding: 5px;
+    font-size: 12px;
+    background-color: #f1f1f1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Контейнер для имен */
+.names-container {
+    margin: 20px 0;
+}
+
+.names-header {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.names-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.name-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-item label {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+/* Статус задачи */
+.status-form {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.status-result {
+    padding: 15px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    min-height: 60px;
+}
+
+.success-text {
+    color: #27ae60;
+}
+
+.error-text {
+    color: #e74c3c;
+}
+
+.progress-text {
+    color: #3498db;
+}
+
+.error-details {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.task-info {
+    border-left: 4px solid #2ecc71;
+}
+
+.task_id_input {
+    margin-bottom: 5px;
+}
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .panel {
+        padding: 15px;
+    }
+
+    .names-list {
+        grid-template-columns: 1fr;
+    }
+
+    .image-item {
+        width: 120px;
+    }
+}

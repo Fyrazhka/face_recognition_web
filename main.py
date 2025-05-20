@@ -2,20 +2,24 @@ import uuid
 from typing import List, Optional
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks, Form
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks, Form, Depends, HTTPException, status, Cookie, Response
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from database.database import add_task, add_task_image, update_task_by_user_key, get_task, update_task, get_task_images
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from database.database import (
+    add_task, add_task_image, update_task_by_user_key, get_task, update_task, get_task_images,
+    register_user, authenticate_user, get_user_by_id, get_user_tasks
+)
 import shutil
 import os
 import json
-
-from starlette.responses import RedirectResponse
-
+import secrets
+from starlette.middleware.sessions import SessionMiddleware
 from logic.face_recognition_logic import FaceRecognitionLogic
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="ваш_секретный_ключ_здесь")
 
 UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -36,12 +40,96 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Функция для проверки аутентификации пользователя
+async def get_current_user(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return None
+
+    user = get_user_by_id(user_id)
+    return user
+
+# Функция для проверки аутентификации с перенаправлением
+async def get_current_user_or_redirect(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    return user
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, error: str = None):
+    return templates.TemplateResponse("login.html", {"request": request, "error": error})
+
+@app.post("/login")
+async def login(request: Request, response: Response):
+    form_data = await request.form()
+    username = form_data.get("username")
+    password = form_data.get("password")
+
+    success, result = authenticate_user(username, password)
+
+    if success:
+        # Установка сессии
+        request.session["user_id"] = result
+        request.session["username"] = username
+        logger.info(f"Успешный вход пользователя: {username}")
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        logger.info(f"Неудачная попытка входа: {username}")
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "Неверное имя пользователя или пароль"
+        })
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request, error: str = None):
+    return templates.TemplateResponse("register.html", {"request": request, "error": error})
+
+@app.post("/register")
+async def register(request: Request):
+    form_data = await request.form()
+    username = form_data.get("username")
+    email = form_data.get("email")
+    password = form_data.get("password")
+    confirm_password = form_data.get("confirm_password")
+
+    # Проверка паролей
+    if password != confirm_password:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Пароли не совпадают"
+        })
+
+    # Регистрация пользователя
+    success, result = register_user(username, email, password)
+
+    if success:
+        # Автоматический вход после регистрации
+        request.session["user_id"] = result
+        request.session["username"] = username
+        logger.info(f"Новый пользователь зарегистрирован и вошел в систему: {username}")
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        logger.info(f"Ошибка при регистрации пользователя {username}: {result}")
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": result
+        })
+
+@app.post("/logout")
+async def logout(request: Request):
+    # Очистка сессии
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
 @app.post("/recognize/")
 async def recognize_face(
         background_tasks: BackgroundTasks,
+        request: Request,
         video: UploadFile = File(...),
         images: List[UploadFile] = File(...),
-        image_names: str = Form(None)  # Принимаем строку JSON с именами
+        image_names: str = Form(None),  # Принимаем строку JSON с именами
+        current_user = Depends(get_current_user)
 ):
     # Создаем временную директорию, если она не существует
     temp_dir = "temp"
@@ -65,8 +153,12 @@ async def recognize_face(
         except json.JSONDecodeError:
             logger.error(f"Ошибка при парсинге JSON имен: {image_names}")
 
-    # Создаем запись о задаче в базе данных
-    add_task(user_key=task_id)
+    # Создаем запись о задаче в базе данных с привязкой к пользователю, если он авторизован
+    user_id = None
+    if current_user:
+        user_id = current_user["id"]
+
+    add_task(user_key=task_id, user_id=user_id)
 
     # Сохраняем все загруженные изображения и добавляем их в базу данных
     image_paths = []
@@ -177,10 +269,24 @@ async def download_result(task_id: str):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request, task_id: str = None):
+async def index(request: Request, task_id: str = None, current_user = Depends(get_current_user)):
+    # Проверяем аутентификацию
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
     task_status = None
     if task_id:
         task = get_task(task_id)
         if task:
             task_status = task[1]  # Статус из базы данных
-    return templates.TemplateResponse("index.html", {"request": request, "task_id": task_id, "task_status": task_status})
+
+    # Получаем список задач пользователя
+    user_tasks = get_user_tasks(current_user["id"])
+
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "task_id": task_id,
+        "task_status": task_status,
+        "user": current_user,
+        "user_tasks": user_tasks
+    })

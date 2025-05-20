@@ -1,0 +1,212 @@
+.auth-panel {
+    max-width: 500px;
+    margin: 50px auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.auth-panel h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.auth-form input[type="text"]:focus,
+.auth-form input[type="email"]:focus,
+.auth-form input[type="password"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
+.auth-form .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.auth-link a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Верхнее меню */
+.top-nav {
+    background-color: #2c3e50;
+    color: white;
+    padding: 0 20px; /* Добавляем отступы по бокам */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    width: 100%; /* Растягиваем на всю ширину */
+    box-sizing: border-box;
+    height: 60px; /* Фиксированная высота для навигационной панели */
+    position: relative; /* Добавляем позиционирование */
+    left: 0; /* Прижимаем к левому краю */
+    right: 0; /* Прижимаем к правому краю */
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    height: 100%; /* Высота равна высоте родителя */
+}
+
+.title h2 {
+    margin: 0; /* Убираем отступы у заголовка */
+    color: white; /* Цвет текста */
+    font-size: 20px; /* Размер шрифта */
+}
+.user-info {
+    display: flex;
+    align-items: center;
+    height: 100%; /* Высота равна высоте родителя */
+}
+
+.user-info span {
+    margin-right: 20px;
+}
+
+.logout-btn {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для личного кабинета */
+.user-dashboard {
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.user-sidebar {
+    width: 250px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-right: 30px;
+}
+
+.user-sidebar h2 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+.user-sidebar ul {
+    list-style: none;
+}
+
+.user-sidebar li {
+    margin-bottom: 10px;
+}
+
+.user-sidebar a {
+    display: block;
+    padding: 10px;
+    color: #2c3e50;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.user-sidebar a:hover,
+.user-sidebar a.active {
+    background-color: #f5f5f5;
+    color: #3498db;
+}
+
+.user-content {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Стили для списка задач */
+.tasks-list {
+    margin-top: 20px;
+}
+
+.task-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-details {
+    flex: 1;
+}
+
+.task-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.task-actions {
+    display: flex;
+    align-items: center;
+}
+
+.task-actions button,
+.task-actions a {
+    margin-left: 10px;
+}

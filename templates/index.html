@@ -3,15 +3,26 @@
 <head>
     <title>Распознавание лиц</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/auth.css">
     <script src="/static/script.js" defer></script>
 </head>
 <body>
-<div class="container">
-    <h1>Распознавание лиц в видео</h1>
+<div class="top-nav">
+    <div class = "title">
+        <h2>Распознавание лиц в видеопотоке</h2>
+    </div>
+    <div class="user-info">
+        <span>{{ user.username }}</span>
+        <form action="/logout" method="post" style="display: inline;">
+            <button type="submit" class="logout-btn">Выйти</button>
+        </form>
+    </div>
+</div>
 
+<div class="container">
     <div class="panel">
         <h2>Загрузите эталонные изображения и видео</h2>
-        <form action="/recognize/" enctype="multipart/form-data" method="post" id="upload-form">
+        <form action="/recognize/" enctype="multipart/form-data" method="post" id="recognize_form">
             <div class="form-group">
                 <label>Эталонные изображения (можно выбрать несколько):</label>
                 <input type="file" name="images" id="images-input" accept="image/*" multiple required>
@@ -46,7 +57,7 @@
         <h2>Проверить статус задачи</h2>
         <form id="status_form" class="status-form">
             <div class="form-group">
-                <input type="text" class = "task_id_input" id="task_id_input" name="task_id" placeholder="Введите ключ задачи" required>
+                <input type="text" class="task_id_input" id="task_id_input" name="task_id" placeholder="Введите ключ задачи" required>
                 <button type="submit" class="btn">Проверить</button>
             </div>
         </form>
@@ -64,6 +75,42 @@
             {% else %}
             <p>Статус задачи: <strong>{{ task_status }}</strong></p>
             {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Список задач пользователя -->
+    <div class="panel">
+        <h2>Ваши задачи</h2>
+        <div class="tasks-list">
+            {% if user_tasks %}
+            {% for task in user_tasks %}
+            <div class="task-item">
+                <div class="task-details">
+                    <div class="task-date">{{ task.created_at }}</div>
+                    <div>Ключ задачи: <strong>{{ task.user_key }}</strong></div>
+                    <div>Статус:
+                        {% if task.status == "done" %}
+                        <span class="success-text">Завершена</span>
+                        {% elif task.status == "error" %}
+                        <span class="error-text">Ошибка</span>
+                        {% elif task.status == "in_progress" %}
+                        <span class="progress-text">В процессе</span>
+                        {% else %}
+                        <span>{{ task.status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn refresh-btn" onclick="document.getElementById('task_id_input').value='{{ task.user_key }}'; checkStatus();">Проверить</button>
+                    {% if task.status == "done" %}
+                    <a href="/download/{{ task.user_key }}" class="download-btn">Скачать</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>У вас пока нет задач распознавания.</p>
             {% endif %}
         </div>
     </div>

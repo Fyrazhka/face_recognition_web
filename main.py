@@ -15,11 +15,13 @@ import shutil
 import os
 import json
 import secrets
+import sqlite3
 from starlette.middleware.sessions import SessionMiddleware
 from logic.face_recognition_logic import FaceRecognitionLogic
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="ваш_секретный_ключ_здесь")
+SECRET_KEY = secrets.token_urlsafe(32)
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -39,6 +41,70 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Добавляем путь к базе данных (предполагаем, что он определен в database.py)
+DB_PATH = "database/recognition.db"  # Укажите правильный путь к вашей БД
+
+# Функции для работы с базой данных с проверкой принадлежности пользователю
+def get_task_by_id_with_user_check(task_id: str, user_id: str):
+    """Получение информации о задаче по ID с проверкой принадлежности пользователю."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    try:
+        logger.info(f"Запрос информации о задаче по ID: {task_id} для пользователя: {user_id}")
+        cursor.execute('''
+            SELECT id, status, result_path, user_key, user_id 
+            FROM recognition_tasks 
+            WHERE id = ? AND (user_id = ? OR user_id IS NULL)
+        ''', (task_id, user_id))
+        row = cursor.fetchone()
+
+        if row:
+            logger.info(f"Найдена задача: id={row[0]}, status={row[1]}, принадлежит пользователю: {row[4] == user_id}")
+            return {
+                "id": row[0],
+                "status": row[1],
+                "result_path": row[2],
+                "user_key": row[3],
+                "user_id": row[4]
+            }
+        else:
+            logger.info(f"Задача с ID {task_id} не найдена или не принадлежит пользователю {user_id}")
+            return None
+    except Exception as e:
+        logger.error(f"Ошибка при запросе задачи по ID {task_id}: {e}")
+        return None
+    finally:
+        conn.close()
+
+
+def get_task_with_user_check(user_key: str, user_id: str):
+    """Получение информации о задаче по ключу пользователя с проверкой принадлежности."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    try:
+        logger.info(f"Запрос информации о задаче по ключу: {user_key} для пользователя: {user_id}")
+        cursor.execute('''
+            SELECT id, status, result_path 
+            FROM recognition_tasks 
+            WHERE user_key = ? AND (user_id = ? OR user_id IS NULL)
+        ''', (user_key, user_id))
+        row = cursor.fetchone()
+
+        if row:
+            logger.info(f"Найдена задача: id={row[0]}, status={row[1]}")
+        else:
+            logger.info(f"Задача с ключом {user_key} не найдена или не принадлежит пользователю {user_id}")
+
+        return row
+    except Exception as e:
+        logger.error(f"Ошибка при запросе задачи по ключу {user_key}: {e}")
+        return None
+    finally:
+        conn.close()
+
 
 # Функция для проверки аутентификации пользователя
 async def get_current_user(request: Request):
@@ -245,25 +311,32 @@ def process_video_task(task_id, image_paths, video_path):
 
 
 @app.get("/status/{task_id}")
-async def check_status(task_id: str):
-    # Используем задержку в ответе, чтобы видеть, что запрос действительно отправляется
+async def check_status(task_id: str, current_user = Depends(get_current_user_or_redirect)):
+    # Проверяем аутентификацию
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+
     import time
     time.sleep(0.2)  # Задержка 200 мс для наглядности
 
-    # task_id используется как user_key
-    task = get_task(task_id)
+    # task_id используется как user_key с проверкой принадлежности пользователю
+    task = get_task_with_user_check(task_id, current_user["id"])
     if not task:
-        return JSONResponse({"error": "Задача не найдена"})
+        return JSONResponse({"error": "Задача не найдена или у вас нет доступа к ней"})
 
-    task_id, status, result_path = task
+    task_id_db, status, result_path = task
     return JSONResponse({"status": status})
 
 
 @app.get("/download/{task_id}")
-async def download_result(task_id: str):
-    task = get_task(task_id)
+async def download_result(task_id: str, current_user = Depends(get_current_user_or_redirect)):
+    # Проверяем аутентификацию
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+
+    task = get_task_with_user_check(task_id, current_user["id"])
     if not task or task[1] != "done" or not task[2]:
-        return JSONResponse({"error": "Результат недоступен"})
+        return JSONResponse({"error": "Результат недоступен или у вас нет доступа к нему"})
 
     return FileResponse(task[2], media_type="text/plain", filename="результат_распознавания.txt")
 
@@ -276,7 +349,8 @@ async def index(request: Request, task_id: str = None, current_user = Depends(ge
 
     task_status = None
     if task_id:
-        task = get_task(task_id)
+        # Используем функцию с проверкой принадлежности пользователю
+        task = get_task_with_user_check(task_id, current_user["id"])
         if task:
             task_status = task[1]  # Статус из базы данных
 
